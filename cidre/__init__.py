@@ -2,8 +2,9 @@
 CIDRE algorithm
 """
 from cidre import utils
-from cidre import filters 
-from cidre import draw
-from cidre import cidre
+from .filters import *
+from .draw import *
+from .cidre import *
+
 __all__ = ["utils", "filters", "draw", "cidre"]
 

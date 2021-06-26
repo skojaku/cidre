@@ -3,101 +3,147 @@ from scipy import sparse
 import pandas as pd
 import networkx as nx
 from cidre import utils
+from cidre import filters
 
 
-def detect(
-    A, threshold, is_excessive, min_group_edge_num=0,
-):
-    """
-    CIDRE algorithm 
+class Group:
+    """Data class for anomalous node groups
 
-    Parameters
-    -----------
-    A : scipy sparse matrix
-        Adjacency matrix 
-    threshold : float
-        The algorithm seeks the groups of nodes that have a
-        donor score or a recipient score larger than or equal to the threshold value.
-    is_excessive : filtering function
-        is_excessive(srg, trg, w) returns True if the edge from src to trg with weight w 
-        is excessive. Otherwise is_excessive(srg, trg, w) returns False.
-    min_group_edge_num: int (Optional; Default 0)
-        The minimum number of edges that the detected group has. 
-        If the algoirthm finds a group of nodes that contain less than or equal to min_edge_num, 
-        the algorithm exlcudes the group from the list of detected groups.
+    A node group consists of donors and recipients.
+    Donors excessively provide edges to other nodes in the group.
+    Recipients excessively receive edges from nodes in the group.
 
-    Returns
-    -------
-    df : pandas.DataFrame
-        Table of nodes detected by CIDRE. df consists of the following columns:
-        - node_labels : label of nodes
-        - group id : ID of the group to which the node belongs
-        - donor_score : donor score for the node
-        - recipient_score : recipient score for the node
-        - is_donor : True if the node is a donor. Otherwise False.
-        - is_recipient : True if the node is a recipient. Otherwise False.
+    The level of donorness and recipientness are measured by
+    donor and recipient scores provided by an external algorithm.
+
+    Then, donor and recipient nodes are identified by a threshold.
     """
 
-    # Filter edges before grouping
-    src, dst, w = utils.find_non_self_loop_edges(A)
-    excessive_edges = is_excessive(src, dst, w)
+    def __init__(self, node_ids, donor_scores, recipient_scores, threshold):
+        """Initialize the group
 
-    A_pruned = utils.construct_adjacency_matrix(
-        src[excessive_edges], dst[excessive_edges], w[excessive_edges], A.shape[0]
-    )
-
-    # Find the group of nodes U with
-    # a donor score or a recipient score
-    # larger than or equal to the threshold
-    num_nodes = A.shape[0]
-    U = np.ones(num_nodes)
-    indeg_zero_truncated = np.maximum(np.array(A.sum(axis=0)).ravel(), 1.0)
-    outdeg_zero_truncated = np.maximum(np.array(A.sum(axis=1)).ravel(), 1.0)
-    while True:
-        # Compute the donor score, recipient score and cartel score
-        donor_score = np.multiply(U, (A_pruned @ U) / outdeg_zero_truncated)
-        recipient_score = np.multiply(U, (U @ A_pruned) / indeg_zero_truncated)
-
-        # Drop the nodes with a cartel score < threshold
-        drop_from_U = (U > 0) * (np.maximum(donor_score, recipient_score) < threshold)
-
-        # Break the loop if no node is dropped from the cartel
-        if np.any(drop_from_U) == False:
-            break
-
-        # Otherwise, drop the nodes from the cartel
-        U[drop_from_U] = 0
-
-    # Find the nodes in U
-    nodes_in_U = np.where(U)[0]
-
-    # Partition U into disjoint groups, U_l
-    A_U = A_pruned[:, nodes_in_U][nodes_in_U, :].copy()
-    net_U = nx.from_scipy_sparse_matrix(A_U, create_using=nx.DiGraph)
-    net_U.remove_nodes_from(list(nx.isolates(net_U)))
-    df_Ul_list = []
-    for _, _nd in enumerate(nx.weakly_connected_components(net_U)):
-        nodes_in_Ul = nodes_in_U[np.array(list(_nd))]
-
-        # Remove the group U_l if
-        # U_l does not contain edges less than or equal to
-        # min_group_edge_num
-        A_Ul = A[nodes_in_Ul, :][:, nodes_in_Ul]
-        num_edges_in_Ul = A_Ul.sum() - A_Ul.diagonal().sum()
-        if num_edges_in_Ul <= min_group_edge_num:
-            continue
-
-        # Pack the results into a pandas
-        df_Ul = pd.DataFrame(
-            {
-                "node_id": nodes_in_Ul,
-                "group_id": np.ones_like(nodes_in_Ul) * len(df_Ul_list),
-                "recipient_score": recipient_score[nodes_in_Ul],
-                "donor_score": donor_score[nodes_in_Ul],
-                "is_recipient": (recipient_score[nodes_in_Ul] >= threshold).astype(int),
-                "is_donor": (donor_score[nodes_in_Ul] >= threshold).astype(int),
-            }
+        :param node_ids: ids of nodes
+        :type node_ids: numpy.array
+        :param donor_scores: donor scores.
+        :type donor_scores: numpy.array
+        :param recipient_scores: recipient scores
+        :type recipient_scores: numpy.array
+        :param threshold: threshold for classifying nodes into donors and recipients
+        :type threshold: float
+        """
+        is_donor, is_recipient = (
+            donor_scores >= threshold,
+            recipient_scores >= threshold,
         )
-        df_Ul_list += [df_Ul]
-    df_U = pd.concat(df_Ul_list, ignore_index=True)
-    return df_U
+        donors, recipients = node_ids[is_donor], node_ids[is_recipient]
+        donor_scores, recipient_scores = (
+            donor_scores[is_donor],
+            recipient_scores[is_recipient],
+        )
+        self.donors = dict(zip(donors, donor_scores))
+        self.recipients = dict(zip(recipients, recipient_scores))
+
+    def set_within_net(self, A):
+        self.A = A
+        self.num_within_edges = A.sum() - A.diagonal().sum()
+
+    def get_within_net(self):
+        return self.A
+
+    def get_within_edges(self):
+        return self.num_within_edges
+
+    def get_donors(self):
+        return self.donors
+
+    def get_recipients(self):
+        return self.recipients
+
+    def get_donor_recipients(self):
+        ids = set(list(self.donors.keys())).intersection(
+            set(list(self.recipients.keys()))
+        )
+        return {
+            i: {"donor": self.donors[i], "recipient": self.recipients[i]} for i in ids
+        }
+
+class Cidre:
+    def __init__(self, min_edge_weight=0, group_membership=None, alpha=0.01):
+        self.min_edge_weight = min_edge_weight
+        self.group_membership = group_membership
+        self.edge_filter = filters.EdgeFilter(alpha=alpha, remove_selfloop=True)
+
+    def detect(self, G, threshold):
+        """Detecting anomalous groups with excessive donors and recipients.
+
+        :param G: Network. If G is a sparse matrix, entry G[i,j] should be the weight of the edge from node i to j.
+        :type G: scipy sparse matrix or networkx.Graph.
+        :param threshold: Threshold for donor and recipient scores. A higher thhreshold yields smaller and tighter groups
+        :type threshold: float
+        """
+        #
+        # Input parsing
+        #
+        A, node_labels = utils.to_adjacency_matrix(G)
+        #
+        # Edge filtering
+        #
+        self.edge_filter.fit(A, group_membership=self.group_membership)
+        src, dst, w = sparse.find(A)
+        src, dst, w = self.edge_filter.transform(src, dst, w)
+
+        Abar = utils.construct_adjacency_matrix(
+            src, dst, w, A.shape[0]
+        )  # Edge filtered network
+
+        #
+        # Node filtering
+        #
+        num_nodes = A.shape[0]  # number of nodes
+        U = np.ones(num_nodes)  # nodes not truncated
+        indeg = np.maximum(
+            np.array(A.sum(axis=0)).ravel(), 1.0
+        )  # In-degree. Clip to one to avoid zero divide.
+        outdeg = np.maximum(
+            np.array(A.sum(axis=1)).ravel(), 1.0
+        )  # Out-degree. Clip to one to avoid zero divide.
+        while True:
+            # Compute the donor score, recipient score and cartel score
+            donor_score = np.multiply(U, (Abar @ U) / outdeg)
+            recipient_score = np.multiply(U, (U @ Abar) / indeg)
+
+            # Drop the nodes with a cartel score < threshold
+            drop_from_U = (U > 0) * (
+                np.maximum(donor_score, recipient_score) < threshold
+            )
+
+            # Break the loop if no node is dropped from the cartel
+            if np.any(drop_from_U) == False:
+                break
+
+            # Otherwise, drop the nodes from the cartel
+            U[drop_from_U] = 0
+
+        # Find the nodes in U
+        survived_nodes = np.where(U)[0]
+        Abar = Abar[:, survived_nodes][survived_nodes, :].copy()
+
+        # Partition U into disjoint groups, U_l
+        anomalous_group_list = []
+        Gbar = nx.from_scipy_sparse_matrix(Abar, create_using=nx.DiGraph)
+        Gbar.remove_nodes_from(list(nx.isolates(Gbar)))
+        for _, _nd in enumerate(nx.weakly_connected_components(Gbar)):
+            _nodes = survived_nodes[np.array(list(_nd))]
+
+            # Remove the group U_l if
+            # U_l does not contain edges less than or equal to
+            # min_group_edge_num
+            A_Ul = A[_nodes, :][:, _nodes]
+
+            group = Group(
+                _nodes, donor_score[_nodes], recipient_score[_nodes], threshold
+            )
+            group.set_within_net(A_Ul)
+            anomalous_group_list += [group]
+
+        return anomalous_group_list

@@ -29,9 +29,9 @@ def construct_adjacency_matrix(src, dst, w, N):
     Parameters
     ----------
     src : numpy.ndarray
-        Source nodes 
+        Source nodes
     dst : numpy.ndarray
-        Target nodes 
+        Target nodes
     w : numpy.ndarray
         Weight of edges
     N : int
@@ -40,7 +40,7 @@ def construct_adjacency_matrix(src, dst, w, N):
     Returns
     -------
     A : scipy sparse matrix
-        Adjacency matrix where A[i,j] indicate the 
+        Adjacency matrix where A[i,j] indicate the
         weight of the edge from node i to node j
     """
     return sparse.csr_matrix((w, (src, dst)), shape=(N, N))
@@ -51,7 +51,7 @@ def find_non_self_loop_edges(A):
     Parameters
     ---------
     A : scipy sparse matrix
-    
+
     Returns
     ------
     r: numpy.ndarray
@@ -59,7 +59,7 @@ def find_non_self_loop_edges(A):
     c: numpy.ndarray
         Column ids for the non-zero elements
     v: numpy.ndarray
-        Values of non-zero elements 
+        Values of non-zero elements
     """
     r, c, v = sparse.find(A)
     non_self_loop = r != c
