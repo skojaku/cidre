@@ -2,64 +2,30 @@ import logging
 import sys
 import unittest
 
-import networkx as nx
 import numpy as np
 from scipy import sparse
+import pandas as pd
 
-import cpnet
-
-numba_logger = logging.getLogger("numba")
-numba_logger.setLevel(logging.WARNING)
-
-logger = logging.getLogger()
-logger.level = logging.DEBUG
+import cidre
 
 
-class TestCalc(unittest.TestCase):
+class Test(unittest.TestCase):
     def setUp(self):
-        # BE =========================
-        self.G = nx.karate_club_graph()
-        self.models = [
-            cpnet.BE(),
-            cpnet.Lip(),
-            cpnet.LowRankCore(),
-            cpnet.LapCore(),
-            cpnet.LapSgnCore(),
-            cpnet.Rombach(),
-            cpnet.Rossa(),
-            cpnet.KM_ER(),
-            cpnet.KM_config(),
-            cpnet.Surprise(),
-        ]
-        stream_handler = logging.StreamHandler(sys.stdout)
-        logger.addHandler(stream_handler)
+        df = pd.read_csv("../data/edges.csv")
+        src = df["source"].values
+        trg = df["target"].values
+        w = df["weight"].values
+        self.N = np.maximum(np.max(src), np.max(trg)) + 1
+        self.A = sparse.csr_matrix((w, (src, trg)), shape=(self.N, self.N))
+        self.group_membership = np.random.randint(0, 3, self.N)
+
+    def test_edge_filtering(self):
+        efilter = cidre.EdgeFilter()
+        efilter.fit(self.A, group_membership=self.group_membership)
 
     def test_detect(self):
-
-        for model in self.models:
-
-            logger.info("Core-periphery detection %s " % str(model))
-
-            model.detect(self.G)
-            pair_id = model.get_pair_id()
-            coreness = model.get_coreness()
-
-            self.assertIsInstance(pair_id, dict)
-            self.assertIsInstance(coreness, dict)
-
-    def test_significance_test(self):
-
-        for model in self.models:
-
-            logger.info("Significance test: core-periphery detection %s " % str(model))
-
-            model.detect(self.G)
-            pair_id = model.get_pair_id()
-            coreness = model.get_coreness()
-
-            sig_pair_id, sig_coreness, significance, p_values = cpnet.qstest(
-                pair_id, coreness, self.G, model
-            )
+        model = cidre.CIDRE(group_membership=self.group_membership)
+        groups = model.detect(self.A, threshold=0.15)
 
 
 if __name__ == "__main__":
