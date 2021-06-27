@@ -1,9 +1,21 @@
+[![Unit Test & Deploy](https://github.com/skojaku/cidre/actions/workflows/main.yml/badge.svg)](https://github.com/skojaku/cidre/actions/workflows/main.yml)
 # Python package for the CItation-Donor-REcipient (CIDRE) algorithm.
 
 Please cite:
+
 ```latex
-Sadamori Kojaku, Giacomo Livan, Naoki Masuda. Detecting citation cartels in journal networks. arXiv:2009.09097 (2020)
+@misc{kojaku2021detecting,
+      title={Detecting citation cartels in journal networks}, 
+      author={Sadamori Kojaku and Giacomo Livan and Naoki Masuda},
+      year={2021},
+      eprint={2009.09097},
+      archivePrefix={arXiv},
+      primaryClass={physics.soc-ph}
+}
 ```
+
+## Requirements
+- Python 3.7 or later
 
 ## Install
 
