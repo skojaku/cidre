@@ -8,7 +8,7 @@ import cidre
 
 class Test(unittest.TestCase):
     def setUp(self):
-        A, node_labels = cidre.utils.read_edge_list("../data/synthe/edge-table.csv")
+        A, node_labels = cidre.utils.read_edge_list("data/synthe/edge-table.csv")
         self.N = A.shape[0] 
         self.A = A 
         self.group_membership = np.random.randint(0, 3, self.N)

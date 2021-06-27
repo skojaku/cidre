@@ -26,8 +26,6 @@ groups = alg.detect(A, threshold = 0.15)
 - `threshold`: Threshold for the donor and recipient nodes. A larger threshold will yield tighter and smaller groups
 - `groups`: Detected groups. This is a list of special class, `Group`.
 
-Let us
-
 The donors of  group can be obtained by
 ```python
 groups[0].donors # {node_id: donor_score}
@@ -46,6 +44,10 @@ ax = plt.gca()
 dc = cidre.DrawCartel()
 dc.draw(group, ax = ax)
 ```
+
+The labels beside the nodes are the ID of the nodes, or equivalently row ids of the adjacency matrix `A`.
+
+To put the node labels, make a dictionary from the ID to label, like `node_labels = {0:"name", 1:"name 2"}`, and pass it by `node_labels = node_labels`.
 
 ## Example script
 - [Toy network with communities](examples/example.ipynb)
