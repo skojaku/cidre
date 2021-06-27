@@ -11,9 +11,11 @@ Sadamori Kojaku, Giacomo Livan, Naoki Masuda. Detecting citation cartels in jour
 pip install cidre
 ```
 
+## Examples
+- [Toy network with communities](examples/example.ipynb)
+- [Citation network of journals in 2013](examples/example2.ipynb)
+
 ## Minimal example
-
-
 
 ```python
 import cidre
@@ -51,6 +53,3 @@ The labels beside the nodes are the ID of the nodes, or equivalently row ids of 
 
 To put the node labels, make a dictionary from the ID to label, like `node_labels = {0:"name", 1:"name 2"}`, and pass it by `node_labels = node_labels`.
 
-## Example script
-- [Toy network with communities](examples/example.ipynb)
-- [Citation network of journals in 2013](examples/example2.ipynb)
