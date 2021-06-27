@@ -26,9 +26,11 @@ groups = alg.detect(A, threshold = 0.15)
 - `threshold`: Threshold for the donor and recipient nodes. A larger threshold will yield tighter and smaller groups
 - `groups`: Detected groups. This is a list of special class, `Group`.
 
+`groups` are a list of `group`s. Each element in the list, `group`, contains the IDs of member nodes with their roles. 
+
 The donors of  group can be obtained by
 ```python
-groups[0].donors # {node_id: donor_score}
+group.donors # {node_id: donor_score}
 ```
 - `group.donors` is a dict object, with keys and values corresponding to the node ID and the donor score.
 
