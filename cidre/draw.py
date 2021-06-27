@@ -20,26 +20,18 @@ class DrawCartel:
         self.group_arc_node_margin = 0.1
         self.edge_norm = lambda x: np.power(x, 1 / 2)
         self.max_edge_width = 15
-        self.font_size = 15 
+        self.font_size = 15
         self.node_size = 0.25
         self.label_width = 15
-        self.max_label_width = 35
+        self.max_label_width = 40
         self.group_order = {"source": 0, "target": 1, "reciprocal": 2, "other": 3}
 
     def draw(
-        self,
-        A,
-        node_ids,
-        donor_score,
-        recipient_score,
-        theta,
-        node_names,
-        cmap=None,
-        ax=None,
+        self, group, node_labels=None, cmap=None, ax=None,
     ):
         """
         Draw citation networks within a citation cartel
-        
+
         Parameters
         ----------
         A : scipy.sparse matrix
@@ -48,22 +40,22 @@ class DrawCartel:
             The node ids of the nodes in the cartel
         donor_score : np.array or list
             The donor score of the nodes in the cartel.
-            We assume the donor_score[i] indicates the 
+            We assume the donor_score[i] indicates the
             donor score for node_ids[i]
         recipient_score : np.array or list
             The recipient score of the nodes in the cartel.
-            We assume the recipient_score[i] indicates the 
+            We assume the recipient_score[i] indicates the
             recipient score for node_ids[i]
         theta : float
             The threshold for the donor and recipient score
         node_name : list
-            Node names. Assume that node_name[i] indicates the 
+            Node names. Assume that node_name[i] indicates the
             name of the node_ids[i]
-        cmap : matplotlib color map or list 
+        cmap : matplotlib color map or list
             Color map or List of strings indicating hex code
         ax : axis
-        
-        Return 
+
+        Return
         ------
         ax : axis
         """
@@ -71,9 +63,20 @@ class DrawCartel:
         #
         # Input formatting
         #
-        node_ids = np.array(node_ids)
-        donor_score = np.array(donor_score)
-        recipient_score = np.array(recipient_score)
+        # A,
+        # node_ids,
+        # donor_score,
+        # recipient_score,
+        # theta,
+        node_ids = np.array(group.node_ids)
+        donor_score = np.array(group.donor_score)
+        recipient_score = np.array(group.recipient_score)
+        theta = group.threshold
+
+        if node_labels is None:
+            node_names = ["%d" % i for i in node_ids]
+        else:
+            node_names = [node_labels[i] for i in node_ids]
 
         # Classify nodes into donor, recipient and reciprocal
         node_types = self.classify_nodes(donor_score, recipient_score, theta)
@@ -90,13 +93,7 @@ class DrawCartel:
         #
         # Construct the adjacency matrix with 'Other' node
         #
-        brow = A[:, node_ids].sum(axis=0)
-        bcol = A[node_ids, :].sum(axis=1)
-        As = A[:, node_ids][node_ids, :].toarray()
-
-        # Add 'Other' node to the adjacency matrix
-        As = np.block([[As, bcol], [brow, np.array([0])]])
-        As = np.array(As)
+        As = group.A.copy()
         node_types += ["other"]
         node_names += ["Other"]
 
@@ -132,7 +129,7 @@ class DrawCartel:
 
         self.plot_node_label(node_table, ax)
 
-        self.plot_nodes(node_table, A, As, node_ids, ax)
+        self.plot_nodes(node_table, As, node_ids, ax)
 
         self.plot_group_arc(node_table, ax)
 
@@ -256,7 +253,7 @@ class DrawCartel:
             lambda x: self.group_order[x["group"]], axis=1
         )
         _node_table = _node_table.sort_values(by="group_order")
-        
+
         if cmap is None:
             if _node_table.shape[0] <= 8:
                 cmap = sns.color_palette().as_hex()
@@ -267,9 +264,11 @@ class DrawCartel:
             elif _node_table.shape[0] <= 20:
                 cmap = sns.color_palette().as_hex()
                 cmap2 = sns.color_palette("Paired").as_hex()
-                cmap = cmap + [c for i, c in enumerate(cmap2) if i % 2 == 1] + [
-                    c for i, c in enumerate(cmap2) if i % 2 == 0
-                ]
+                cmap = (
+                    cmap
+                    + [c for i, c in enumerate(cmap2) if i % 2 == 1]
+                    + [c for i, c in enumerate(cmap2) if i % 2 == 0]
+                )
             elif _node_table.shape[0] <= 40:
                 # cmap = sns.color_palette("Set1").as_hex()
                 cmap = sns.color_palette("tab20").as_hex()
@@ -335,7 +334,6 @@ class DrawCartel:
                 connectionstyle=connectionstyle,
                 **kw
             )
-
             ax.add_patch(a3)
 
     def plot_node_label(self, node_table, ax):
@@ -368,7 +366,7 @@ class DrawCartel:
             if row["group"] == "other":
                 ha = "center"
                 va = "top"
-            texts += [ax.text(x, y, row["name"], ha=ha, va=va, fontsize = self.font_size)]
+            texts += [ax.text(x, y, row["name"], ha=ha, va=va, fontsize=self.font_size)]
 
     def plot_group_arc(self, node_table, ax):
         params = {"lw": 3, "fc": "white", "alpha": 0.3, "zorder": 0, "angle": 90}
@@ -403,10 +401,10 @@ class DrawCartel:
         ax.set_ylim(bottom=-R, top=R)
         ax.axis("off")
 
-    def plot_nodes(self, node_table, A, As, node_ids, ax):
+    def plot_nodes(self, node_table, As, node_ids, ax):
 
         # Calculate the angle of pie
-        indeg = np.array(A[:, node_ids].sum(axis=0)).reshape(-1)
+        indeg = np.array(As.sum(axis=0)).reshape(-1)[:-1]
         share = As[:-1, :-1] @ np.diag(1.0 / np.maximum(1, indeg))
 
         for i, row in node_table.iterrows():

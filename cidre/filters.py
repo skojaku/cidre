@@ -7,10 +7,13 @@ from functools import partial
 
 
 class EdgeFilter:
-    def __init__(self, min_edge_weight=0, alpha=0.01, remove_selfloop=True):
+    def __init__(
+        self, min_edge_weight=0, alpha=0.01, remove_selfloop=True, min_expected_weight=1
+    ):
         self.alpha = alpha
         self.min_edge_weight = min_edge_weight
         self.remove_selfloop = remove_selfloop
+        self.min_expected_weight = min_expected_weight
 
     def fit(self, A, group_membership, mask=None):
         """Find the excessive edges in the network using the dcSBM as a null model.
@@ -24,7 +27,9 @@ class EdgeFilter:
         """
         if group_membership is None:
             group_membership = np.zeros(A.shape[0]).astype(int)
-        p_value, src, dst, w = self._calc_p_values_dcsbm(A, group_membership)
+        p_value, src, dst, w = self._calc_p_values_dcsbm(
+            A, group_membership, self.min_expected_weight
+        )
 
         if self.remove_selfloop:
             s = src != dst
@@ -53,7 +58,7 @@ class EdgeFilter:
     def transform(self, src, dst, w):
         return self.filter(src, dst, w)
 
-    def _calc_p_values_dcsbm(self, A, group_membership):
+    def _calc_p_values_dcsbm(self, A, group_membership, min_expected_weight=1):
         """Calculate the p_values using the degree-corrected stochastic block model.
 
         :param A: Adjacency matrix. Adjacency matrix, where A[i,j] indicates the weight of the edge from node i to node j.
@@ -82,7 +87,7 @@ class EdgeFilter:
             * theta_out[src]
             * theta_in[dst]
         )
-        lam = np.maximum(lam, 1.0)
+        lam = np.maximum(lam, min_expected_weight)
         pvals = 1.0 - stats.poisson.cdf(w - 1, lam)
 
         return pvals, src, dst, w
@@ -97,9 +102,11 @@ class EdgeFilter:
         """
         order = np.argsort(pvals)
         M = pvals.size
-        last_true_id = np.where(pvals[order] <= (self.alpha * np.arange(1, M + 1) / M))[
-            0
-        ][-1]
+        is_sig = pvals[order] <= (self.alpha * np.arange(1, M + 1) / M)
+        if np.any(is_sig) == False:
+            return is_sig
+
+        last_true_id = np.where(is_sig)[0][-1]
         is_sig = np.zeros(M)
         is_sig[order[: (last_true_id + 1)]] = 1
         return is_sig > 0

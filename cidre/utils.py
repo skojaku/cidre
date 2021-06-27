@@ -1,6 +1,25 @@
 import numpy as np
 from scipy import sparse
 import networkx as nx
+import pandas as pd
+
+
+def read_edge_list(edge_file, weight_col="weight", sep=","):
+    edge_table = pd.read_csv(edge_file)
+    edges = edge_table[["src", "trg"]].values
+    node_labels, edges = np.unique(edges, return_inverse=True)
+    id2label = dict(zip(np.arange(len(node_labels)), node_labels))
+    edges = edges.reshape((edge_table.shape[0], 2))
+    src = edges[:, 0]
+    trg = edges[:, 1]
+
+    if weight_col in edge_table.keys():
+        w = edge_table["weight"].values
+    else:
+        w = np.ones_like(src)
+    N = np.maximum(np.max(src), np.max(trg)) + 1
+    A = sparse.csr_matrix((w, (src, trg)), shape=(N, N))
+    return A, id2label
 
 
 def to_adjacency_matrix(net, node_labels=None):

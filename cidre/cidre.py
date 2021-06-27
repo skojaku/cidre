@@ -31,6 +31,11 @@ class Group:
         :param threshold: threshold for classifying nodes into donors and recipients
         :type threshold: float
         """
+        self.node_ids = node_ids.copy()
+        self.recipient_score = recipient_scores.copy()
+        self.donor_score = donor_scores.copy()
+        self.threshold = threshold
+
         is_donor, is_recipient = (
             donor_scores >= threshold,
             recipient_scores >= threshold,
@@ -43,14 +48,24 @@ class Group:
         self.donors = dict(zip(donors, donor_scores))
         self.recipients = dict(zip(recipients, recipient_scores))
 
-    def set_within_net(self, A):
-        self.A = A
-        self.num_within_edges = A.sum() - A.diagonal().sum()
+    def size(self):
+        return len(self.node_ids)
+
+    def set_within_net(self, A, node_ids):
+        brow = A[:, node_ids].sum(axis=0)
+        bcol = A[node_ids, :].sum(axis=1)
+        As = A[:, node_ids][node_ids, :].toarray()
+
+        self.num_within_edges = As.sum() - As.diagonal().sum()
+
+        # Add 'Other' node to the adjacency matrix
+        B = np.block([[As, bcol], [brow, np.array([0])]])
+        self.A = np.array(B)
 
     def get_within_net(self):
         return self.A
 
-    def get_within_edges(self):
+    def get_num_edges(self):
         return self.num_within_edges
 
     def get_donors(self):
@@ -67,11 +82,25 @@ class Group:
             i: {"donor": self.donors[i], "recipient": self.recipients[i]} for i in ids
         }
 
+
 class Cidre:
-    def __init__(self, min_edge_weight=0, group_membership=None, alpha=0.01):
-        self.min_edge_weight = min_edge_weight
+    def __init__(
+        self,
+        min_edge_weight=0,
+        min_expected_weight=1,
+        group_membership=None,
+        alpha=0.01,
+    ):
+        if isinstance(group_membership, list):
+            group_membership = np.array(group_membership)
+
         self.group_membership = group_membership
-        self.edge_filter = filters.EdgeFilter(alpha=alpha, remove_selfloop=True)
+        self.edge_filter = filters.EdgeFilter(
+            alpha=alpha,
+            min_edge_weight=min_edge_weight,
+            min_expected_weight=min_expected_weight,
+            remove_selfloop=True,
+        )
 
     def detect(self, G, threshold):
         """Detecting anomalous groups with excessive donors and recipients.
@@ -138,12 +167,12 @@ class Cidre:
             # Remove the group U_l if
             # U_l does not contain edges less than or equal to
             # min_group_edge_num
-            A_Ul = A[_nodes, :][:, _nodes]
+            # A_Ul = A[_nodes, :][:, _nodes]
 
             group = Group(
                 _nodes, donor_score[_nodes], recipient_score[_nodes], threshold
             )
-            group.set_within_net(A_Ul)
+            group.set_within_net(A, _nodes)
             anomalous_group_list += [group]
 
         return anomalous_group_list
