@@ -5,7 +5,7 @@ Please cite:
 
 ```latex
 @misc{kojaku2021cartel,
-      title={Detecting citation cartels in journal networks}, 
+      title={Detecting citation cartels in journal networks},
       author={Sadamori Kojaku and Giacomo Livan and Naoki Masuda},
       year={2021},
       eprint={2009.09097},
@@ -24,7 +24,7 @@ pip install cidre
 ```
 
 ## Examples
-- [Toy network with communities](examples/example.ipynb)
+- [Toy network with communities](examples/example1.ipynb)
 - [Citation network of journals in 2013](examples/example2.ipynb)
 
 ## A minimal example
@@ -35,33 +35,74 @@ import cidre
 alg = cidre.Cidre(group_membership)
 groups = alg.detect(A, threshold = 0.15)
 ```
-- `group_membership`: If the network has communities, and the communities are not anomalous, tell the community membership to CIDRE through this argument, where `group_membership[i]` indicates the group to which node i belongs. Otherwise, set `group_membership=None`.
-- `A`: Adjacency matrix of the input network (can be weighted or directed). Should be either an nx.Graph or scipy.sparse_matrix. If it is in the scipy.sparse_matrix format, A[i,j] indicates the weight of edge from node i to j.
+
+- `group_membership` (*Optional*): If the network has communities, and the communities are not anomalous, tell the communities to CIDRE with this argument. `group_membership` should be numpy.array or list with element `group_membership[i]` indicating the group to which node i belongs. Otherwise, set `group_membership=None`.
+- `A`: Adjacency matrix of the input network (can be weighted or directed). Should be either an nx.Graph or scipy.sparse_matrix. In case of scipy.sparse_matrix format, A[i,j] indicates the weight of the edge from node i to j.
 - `threshold`: Threshold for the donor and recipient nodes. A larger threshold will yield tighter and smaller groups.
-- `groups`: Detected groups. This is a list of special class, `Group`.
+- `groups`: List of `Group` instances. See [Group class](#Group-class) section.
 
-`groups` is a list of `group`s. Each element in the list, `group`, contains the IDs of the member nodes with their roles. 
+## Group class
 
-The donors of a group are given by
+`Group` is a dedicated class for groups of donor and recipient nodes.
+
+The donor and recipient nodes of a group, denoted by `group`, can be obtained by
 ```python
 group.donors # {node_id: donor_score}
+group.recipients # {node_id: recipient_score}
 ```
-- `group.donors` is a dict object, with keys and values corresponding to the node ID and the donor score.
 
-Similarly, the recipients of a group together with their recipient scores are given by
+- `group.donors` is a dict object taking keys and values corresponding to the node ID and the donor score, respectively.
+- `group.recipients` is the analogous dict object for the recipient nodes.
+
+The number of nodes and edges within the group can be obtained by
 ```python
-group.recipient # {node_id: recipient_score}
+group.size() # Number of nodes
+group.get_within_edges() # Number of edges within this group
 ```
 
 ## Visualization
 
+`cidre` package provides an API to visualize small groups. Before using this API, set up your canvas by
+```python
+import matplotlib.pyplot as plt
+
+width, height = 7, 10
+fig, ax = plt.subplots((width, height))
 ```
-ax = plt.gca()
+
+Then, pass `ax` together with `group` that you want to visualize:
+```python
+import cidre
 dc = cidre.DrawCartel()
 dc.draw(group, ax = ax)
 ```
 
-The labels beside the nodes are the ID of the nodes, or equivalently row ids of the adjacency matrix `A`.
+This will show a graph like this:
 
-To put the node labels, make a dictionary from the ID to label, like `node_labels = {0:"name", 1:"name 2"}`, and pass it by `node_labels = node_labels`.
+<p align="center">
+<img src="figs/fig-example-1.png" width="40%" height="40%">
+</p>
+
+- The left and right nodes correspond to donor and recipients nodes, respectively.
+- The color of each edge corresponds to the color of the source node (i.e., the node from which the edge emanates).
+- The with of each edge is proportional to the weight of the edge.
+- The text next to each node corresponds to the ID of the node, or equivalently the row id of the adjacency matrix `A`
+
+Instead of node IDs, you may want to display the nodes' labels. To do this, prepare a dict object taking IDs and labels as keys and values, respectively, e.g.,
+
+```python
+node_labels = {0:"name", 1:"name 2"}
+```
+
+Then, pass it to the `draw` function as `node_labels` argument, i.e.,
+```python
+dc.draw(group, node_labels = node_labels, ax = ax)
+```
+which displays
+
+<p align="center">
+<img src="figs/fig-example-2.png" width="40%" height="40%">
+</p>
+
+
 
