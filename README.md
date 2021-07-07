@@ -51,7 +51,7 @@ group.donors # {node_id: donor_score}
 group.recipients # {node_id: recipient_score}
 ```
 
-- `group.donors` is a dict object taking keys and values corresponding to the node ID and the donor score, respectively.
+- `group.donors` is a dict object taking keys and values corresponding to the node IDs and the donor scores, respectively.
 - `group.recipients` is the analogous dict object for the recipient nodes.
 
 The number of nodes and edges within the group can be obtained by
@@ -83,9 +83,9 @@ This will show a graph like this:
 <img src="figs/fig-example-1.png" width="40%" height="40%">
 </p>
 
-- The left and right nodes correspond to donor and recipients nodes, respectively.
+- The left and right nodes correspond to the donor and recipients nodes, respectively.
 - The color of each edge corresponds to the color of the source node (i.e., the node from which the edge emanates).
-- The with of each edge is proportional to the weight of the edge.
+- The width of each edge is proportional to the weight of the edge.
 - The text next to each node corresponds to the ID of the node, or equivalently the row id of the adjacency matrix `A`
 
 Instead of node IDs, you may want to display the nodes' labels. To do this, prepare a dict object taking IDs and labels as keys and values, respectively, e.g.,
