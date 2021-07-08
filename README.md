@@ -1,7 +1,12 @@
 [![Unit Test & Deploy](https://github.com/skojaku/cidre/actions/workflows/main.yml/badge.svg)](https://github.com/skojaku/cidre/actions/workflows/main.yml)
 # Python package for the CItation-Donor-REcipient (CIDRE) algorithm.
 
-Please cite:
+CIDRE is an algorithm to find anomalous groups in directed and weighted networks.
+An anomalous group consists of donor and recipient nodes, connected by edges with excessive edge weights (i.e., excessive edges).
+A donor is a node providing excessive edges to other member nodes.
+A recipient is a node having excessive edges from other member nodes.
+
+If you use this package, please cite:
 
 ```latex
 @misc{kojaku2021cartel,
@@ -36,8 +41,8 @@ alg = cidre.Cidre(group_membership)
 groups = alg.detect(A, threshold = 0.15)
 ```
 
-- `group_membership` (*Optional*): If the network has communities, and the communities are not anomalous, tell the communities to CIDRE with this argument. `group_membership` should be numpy.array or list with element `group_membership[i]` indicating the group to which node i belongs. Otherwise, set `group_membership=None`.
-- `A`: Adjacency matrix of the input network (can be weighted or directed). Should be either an nx.Graph or scipy.sparse_matrix. In case of scipy.sparse_matrix format, A[i,j] indicates the weight of the edge from node i to j.
+- `group_membership` (*Optional*): If the network has communities, and the communities are not anomalous, tell the communities to CIDRE with this argument. `group_membership` should be numpy.array or list with element, `group_membership[i]`, indicating the group to which node i belongs. Otherwise, set `group_membership=None`.
+- `A`: Adjacency matrix of the input network (can be weighted or directed). Should be either an nx.Graph or scipy.sparse_csr_matrix. In case of scipy.sparse_csr_matrix format, A[i,j] indicates the weight of the edge from node i to j.
 - `threshold`: Threshold for the donor and recipient nodes. A larger threshold will yield tighter and smaller groups.
 - `groups`: List of `Group` instances. See [Group class](#Group-class) section.
 
@@ -70,14 +75,14 @@ width, height = 7, 10
 fig, ax = plt.subplots((width, height))
 ```
 
-Then, pass `ax` together with `group` that you want to visualize:
+Then, pass `ax` together with `group` that you want to visualize to `DrawGroup` class:
 ```python
 import cidre
-dc = cidre.DrawCartel()
+dc = cidre.DrawGroup()
 dc.draw(group, ax = ax)
 ```
 
-This will show a graph like this:
+This will show a plot like this:
 
 <p align="center">
 <img src="figs/fig-example-1.png" width="40%" height="40%">
@@ -86,19 +91,18 @@ This will show a graph like this:
 - The left and right nodes correspond to the donor and recipients nodes, respectively.
 - The color of each edge corresponds to the color of the source node (i.e., the node from which the edge emanates).
 - The width of each edge is proportional to the weight of the edge.
-- The text next to each node corresponds to the ID of the node, or equivalently the row id of the adjacency matrix `A`
+- The text next to each node corresponds to the ID of the node, or equivalently the row id of the adjacency matrix `A`.
 
 Instead of node IDs, you may want to display the nodes' labels. To do this, prepare a dict object taking IDs and labels as keys and values, respectively, e.g.,
 
 ```python
-node_labels = {0:"name", 1:"name 2"}
+node_labels = {0:"name 1", 1:"name 2"}
 ```
 
 Then, pass it to the `draw` function as `node_labels` argument, i.e.,
 ```python
 dc.draw(group, node_labels = node_labels, ax = ax)
 ```
-which displays
 
 <p align="center">
 <img src="figs/fig-example-2.png" width="40%" height="40%">
