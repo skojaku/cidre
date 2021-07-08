@@ -1,25 +1,30 @@
-.. cpnet documentation master file, created by
+.. cidre documentation master file, created by
    sphinx-quickstart on Tue Jan 26 16:30:04 2021.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-A Python package for detecting core-periphery structure in networks
-===================================================================
+Python package for the CItation-Donor-REcipient (CIDRE) algorithm
+=================================================================
 
-This package contains algorithms for detecting core-periphery structure in networks. 
-All algorithms are implemented in Python, with speed accelerations by numba, and can be used with a small coding effort.
-
+This is a Python package for CIDRE, an algorithm for finding anomalous groups in networks. 
 See the `project page <https://github.com/skojaku/cidre>`_ for the usage of this package.
+
+If you find this package is useful, please cite our paper!
+
+.. code-block:: bash 
+
+    @misc{kojaku2021cartel,
+          title={Detecting citation cartels in journal networks},
+          author={Sadamori Kojaku and Giacomo Livan and Naoki Masuda},
+          year={2021},
+          eprint={2009.09097},
+          archivePrefix={arXiv},
+          primaryClass={physics.soc-ph}
+    }
 
 
 Installation
 ************
-
-Before installing this package, make sure that you have a **Python with version 3.6 or above**.
-
-There are two ways to install this package, *conda* or *pip*. conda is recommended if you have a conda environment. Otherwise, use pip.  
-
-For pip:
 
 .. code-block:: bash 
 
@@ -32,14 +37,6 @@ This package is under active development. If you have issues and feature request
    :caption: Contents:
 
    modules
-
-Examples
-**********
-- `Example 1 
-- `Example 2 
-- `Example 3 
-- `Example 4 
-
 
 Indices and tables
 ******************
