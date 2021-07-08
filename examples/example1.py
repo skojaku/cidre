@@ -7,16 +7,12 @@
 #       format_version: '1.5'
 #       jupytext_version: 1.11.3
 #   kernelspec:
-#     display_name: 'Python 3.9.5 64-bit (''cidre'': conda)'
-#     metadata:
-#       interpreter:
-#         hash: 49b6ca353dc72eaa7567b913840b57be97cddc3ca403de488a09784bf8cf9f8b
+#     display_name: Python 3
+#     language: python
 #     name: python3
 # ---
 
 # # About this notebook
-#
-# CIDRE is a scalable algorithm to find anomalous groups in directed and weighted networks with communities. CIDRE seeks to find groups of nodes that are more strongly connected with each other more than *expected*. Our expectation for the weight of the edge between nodes `i` and `j` is based on (i) out-strength of `i` and `j`, (ii) the in-strength of `i` and `j`, and (iii) the communities to which `i` and `j` belong.
 #
 # In this notebook, we will apply CIDRE to a network with communities and demonstrate how to use CIDRE and visualize the detected groups.
 #
@@ -85,4 +81,4 @@ width, height = 5,5
 fig, ax = plt.subplots(figsize=(width, height))
 
 # Plot with cidre package
-cidre.DrawCartel().draw(groups[0], ax = ax)
+cidre.DrawGroup().draw(groups[0], ax = ax)
