@@ -3,8 +3,8 @@
 
 CIDRE is an algorithm to find anomalous groups in directed and weighted networks.
 An anomalous group consists of donor and recipient nodes, connected by edges with excessive edge weights (i.e., excessive edges).
-A donor is a node providing excessive edges to other member nodes.
-A recipient is a node having excessive edges from other member nodes.
+A donor is a node providing excessive edges to other member nodes in the same group.
+A recipient is a node having excessive edges from other member nodes in the same group.
 
 If you use this package, please cite:
 
@@ -12,7 +12,7 @@ If you use this package, please cite:
 @misc{kojaku2021cartel,
       title={Detecting citation cartels in journal networks},
       author={Sadamori Kojaku and Giacomo Livan and Naoki Masuda},
-      year={2021},
+      year={2020},
       eprint={2009.09097},
       archivePrefix={arXiv},
       primaryClass={physics.soc-ph}
