@@ -1,5 +1,5 @@
 [![Unit Test & Deploy](https://github.com/skojaku/cidre/actions/workflows/main.yml/badge.svg)](https://github.com/skojaku/cidre/actions/workflows/main.yml)
-# Python package for the CItation-Donor-REcipient (CIDRE) algorithm.
+# Python package for the CItation-Donor-REcipient (CIDRE) algorithm
 
 CIDRE is an algorithm to find anomalous groups in directed and weighted networks.
 An anomalous group consists of donor and recipient nodes, connected by edges with excessive edge weights (i.e., excessive edges).
