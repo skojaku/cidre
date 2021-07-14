@@ -50,7 +50,7 @@ group.donors # {node_id: donor_score}
 
 Similarly, the recipients of a group together with their recipient scores are given by
 ```python
-group.recipient # {node_id: recipient_score}
+group.recipients # {node_id: recipient_score}
 ```
 
 ## Visualization
