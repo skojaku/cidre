@@ -4,14 +4,22 @@
 Please cite:
 
 ```latex
-@misc{kojaku2021cartel,
-      title={Detecting citation cartels in journal networks}, 
-      author={Sadamori Kojaku and Giacomo Livan and Naoki Masuda},
-      year={2021},
-      eprint={2009.09097},
-      archivePrefix={arXiv},
-      primaryClass={physics.soc-ph}
+
+
+@ARTICLE{Kojaku2021,
+  title     = "Detecting anomalous citation groups in journal networks",
+  author    = "Kojaku, Sadamori and Livan, Giacomo and Masuda, Naoki",
+  journal   = "Sci. Rep.",
+  publisher = "Nature Publishing Group",
+  volume    =  11,
+  number    =  1,
+  pages     = "1--11",
+  month     =  jul,
+  year      =  2021,
+  language  = "en"
 }
+
+
 ```
 
 ## Requirements
