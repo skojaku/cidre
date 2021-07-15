@@ -32,7 +32,6 @@ pip install cidre
 
 ## Examples
 - [Toy network with communities](examples/example.ipynb)
-- [Citation network of journals in 2013](examples/example2.ipynb)
 
 ## A minimal example
 
