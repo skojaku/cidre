@@ -16,7 +16,6 @@ Please cite:
   pages     = "1--11",
   month     =  jul,
   year      =  2021,
-  language  = "en"
 }
 
 
