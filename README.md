@@ -3,6 +3,8 @@
 
 Please cite:
 
+Kojaku, S., Livan, G. & Masuda, N. Detecting anomalous citation groups in journal networks. Sci Rep 11, 14524 (2021). https://doi.org/10.1038/s41598-021-93572-3. 
+
 ```latex
 
 
