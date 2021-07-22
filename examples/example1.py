@@ -128,10 +128,11 @@ fig, ax = plt.subplots(figsize=(width, height))
 # Plot a citation group
 cidre.DrawGroup().draw(groups[0], ax = ax)
 
-# # Example 2
+# -
 
-# # Let's go through another example, which is a much large empirical citation network.
-# #  
+# # Example 2
+# Let's go through another example, which is a much large empirical citation network.
+#   
 # In this example, we walk through how to use CIDRE to detect anomalous journal groups in a citation network. We assume that you have read "examples/example.ipynb".
 #
 # To begin with we need some libraries:
