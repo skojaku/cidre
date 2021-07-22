@@ -17,6 +17,9 @@
 #
 # In this notebook, we apply CIDRE to a network with communities and demonstrate how to use CIDRE and visualize the detected groups.
 #
+#
+# # Loading libraries
+#
 # To start, we'll need some libraries.
 #
 
@@ -26,6 +29,8 @@ from scipy import sparse
 import pandas as pd
 import cidre
 
+# # Example 1
+#
 # Next, we load a network. We first present an example of a small artificial network and then a larger empirical network.
 
 # +
@@ -83,14 +88,14 @@ def detect_community(A, K = None, **params):
 
 group_membership = detect_community(A, K = 3) 
 
-# Now, we input a network and its community structure to CIDRE. To to this,　we create a `cidre.Cidre` object and input `group_membership` along with some key parameters to `cidre.Cidre`.
+# Now, we feed the network and its community structure to CIDRE. To to this, we create a `cidre.Cidre` object and input `group_membership` along with some key parameters to `cidre.Cidre`.
 
 alg = cidre.Cidre(group_membership = group_membership, alpha = 0.05, min_edge_weight = 1)
 
 # - `alpha` (default 0.01) is the statistical significance level.
 # - `min_edge_weight` is the threshold of the edge weight, i.e., the edges with weight less than this value will be removed.
 #
-# Then, input the network in form of `scipy.sparse_csr` matrix or `nx.Graph` to `cidre.Cidre.detect`.
+# Then, we input the network in the `scipy.sparse_csr` matrix or `nx.Graph` format to `cidre.Cidre.detect`.
 
 groups = alg.detect(A, threshold=0.15)
 
@@ -102,14 +107,12 @@ groups[0].donors
 
 groups[0].recipients
 
-# # Visualization 
-#
-# `cidre` package provides an API to visualize small groups. To use this API, first of all, we need some additional libraries.
+# `cidre` package provides an API to visualize small groups. To use this API, we first need to import some additional libraries.
 
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-# Then plot the group by
+# Then, plot the group by
 
 # +
 # The following three lines are purely for visual enhancement, i.e., changing the saturation of the colors and font size.
@@ -123,3 +126,9 @@ fig, ax = plt.subplots(figsize=(width, height))
 
 # Plot a citation group
 cidre.DrawGroup().draw(groups[0], ax = ax)
+
+# # Example 2
+
+# Let's go through another example, which is a much large empirical citation network.
+
+
