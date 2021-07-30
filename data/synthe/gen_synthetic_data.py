@@ -80,17 +80,17 @@ if __name__ == "__main__":
     output_node_file = "node-table.csv"
     output_edge_file = "edge-table.csv"
 
-    N = 200  # Number of nodes
+    N = 100  # Number of nodes
     dave = 200  # average degree
     K = 2  # Number of communities
-    mix_rate = 0.1  # Level of noise
+    mix_rate = 0.2  # Level of noise
     gamma = 3  # degree exponent
 
     Kc = 5  # Number of anomalous groups
     Nc = 5  # Number of nodes in an anomalous group
     Nd = 2  # Number of donors
     inflation_rate = 0.15  # fraction of edge weights inflated by anomalous groups
-    min_edge_weight = 2
+    min_edge_weight = 3
 
     # %% Generate base graph
     outdeg = gen_deg(gamma, dave, N)
