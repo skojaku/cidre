@@ -54,6 +54,7 @@ def gen_anomalous_group(
     indeg = np.zeros_like(nodes)
     outdeg = np.zeros_like(nodes)
     gids = np.zeros_like(nodes)
+    gids[recipients] = 1
 
     theta = inflation_rate / (1 - inflation_rate) + 1
 
@@ -66,9 +67,8 @@ def gen_anomalous_group(
     else:
         indeg = indeg / alpha
 
-    gids[recipients] = 1
-
     B = gen_noisy_dcSBM(indeg, outdeg, gids, mix_rate, is_bipartite=True)
+    print(B)
     U = sparse.csr_matrix(
         (np.ones_like(gids), (nodes, np.arange(gids.size))), shape=(N, Nc)
     )
@@ -79,12 +79,12 @@ if __name__ == "__main__":
     output_node_file = "node-table.csv"
     output_edge_file = "edge-table.csv"
 
-    N = 1000  # Number of nodes
-    dave = 100  # average degree
+    N = 100  # Number of nodes
+    dave = 10  # average degree
     K = 2  # Number of communities
     mix_rate = 0.2  # Level of noise
 
-    Kc = 3  # Number of anomalous groups
+    Kc = 10  # Number of anomalous groups
     Nc = 5  # Number of nodes in an anomalous group
     Nd = 2  # Number of donors
     inflation_rate = 0.2  # fraction of edge weights inflated by anomalous groups
@@ -123,7 +123,7 @@ if __name__ == "__main__":
     ).to_csv(output_node_file)
 
     r, c, v = sparse.find(A)
-    pd.DataFrame({"src": r, "trg": c, "w": v}).to_csv(output_edge_file)
+    pd.DataFrame({"src": r, "trg": c, "weight": v}).to_csv(output_edge_file)
 
 # %%
 
