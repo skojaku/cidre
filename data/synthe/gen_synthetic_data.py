@@ -1,4 +1,5 @@
 # %%
+from networkx.algorithms.covering import min_edge_cover
 import numpy as np
 from scipy import sparse
 import pandas as pd
@@ -21,7 +22,7 @@ def gen_noisy_dcSBM(indeg, outdeg, gids, mix_rate, is_bipartite=False):
     Din = np.array(indeg.T @ U).reshape(-1)
     Dout = np.array(outdeg.T @ U).reshape(-1)
 
-    Arand = np.outer(indeg, outdeg) / np.sum(indeg)
+    Arand = np.outer(outdeg, indeg) / np.sum(indeg)
     if is_bipartite:
         Acom = (
             sparse.diags(outdeg / np.maximum(Dout[gids], 1))
@@ -40,6 +41,7 @@ def gen_noisy_dcSBM(indeg, outdeg, gids, mix_rate, is_bipartite=False):
         )
     A = mix_rate * Arand + (1 - mix_rate) * Acom
     A = A - np.diag(np.diag(A))
+
     return np.random.poisson(A)
 
 
@@ -56,7 +58,7 @@ def gen_anomalous_group(
     gids = np.zeros_like(nodes)
     gids[recipients] = 1
 
-    theta = inflation_rate / (1 - inflation_rate) + 1
+    theta = inflation_rate / (1 - inflation_rate)
 
     indeg[recipients] = indeg_base[nodes[recipients]] * theta
     outdeg[donors] = outdeg_base[nodes[donors]] * theta
@@ -68,7 +70,6 @@ def gen_anomalous_group(
         indeg = indeg / alpha
 
     B = gen_noisy_dcSBM(indeg, outdeg, gids, mix_rate, is_bipartite=True)
-    print(B)
     U = sparse.csr_matrix(
         (np.ones_like(gids), (nodes, np.arange(gids.size))), shape=(N, Nc)
     )
@@ -79,25 +80,29 @@ if __name__ == "__main__":
     output_node_file = "node-table.csv"
     output_edge_file = "edge-table.csv"
 
-    N = 100  # Number of nodes
-    dave = 10  # average degree
+    N = 200  # Number of nodes
+    dave = 200  # average degree
     K = 2  # Number of communities
-    mix_rate = 0.2  # Level of noise
+    mix_rate = 0.1  # Level of noise
+    gamma = 3  # degree exponent
 
-    Kc = 10  # Number of anomalous groups
+    Kc = 5  # Number of anomalous groups
     Nc = 5  # Number of nodes in an anomalous group
     Nd = 2  # Number of donors
-    inflation_rate = 0.2  # fraction of edge weights inflated by anomalous groups
+    inflation_rate = 0.15  # fraction of edge weights inflated by anomalous groups
+    min_edge_weight = 2
 
     # %% Generate base graph
-    outdeg = gen_deg(5, dave, N)
-    indeg = gen_deg(5, dave, N)
+    outdeg = gen_deg(gamma, dave, N)
+    indeg = gen_deg(gamma, dave, N)
     alpha = np.sum(indeg) / np.sum(outdeg)
     if alpha > 1:
         outdeg = outdeg * alpha
     else:
         indeg = indeg / alpha
     gids = np.random.randint(0, K, N)
+    gids = np.sort(gids)
+
     Abase = gen_noisy_dcSBM(indeg, outdeg, gids, mix_rate)
 
     indeg = np.array(Abase.sum(axis=0))
@@ -123,6 +128,10 @@ if __name__ == "__main__":
     ).to_csv(output_node_file)
 
     r, c, v = sparse.find(A)
+
+    s = v >= min_edge_weight
+    r, c, v = r[s], c[s], v[s]
+
     pd.DataFrame({"src": r, "trg": c, "weight": v}).to_csv(output_edge_file)
 
 # %%
