@@ -31,7 +31,7 @@ import cidre
 
 # # Example 1
 #
-# Next, we load a network. We first present an example of a small artificial network and then a larger empirical network.
+# Next, we load a network. We first present an example of a small artificial network.
 
 # +
 # Data path
@@ -45,13 +45,13 @@ A, node_labels = cidre.utils.read_edge_list(edge_file)
 
 # We constructed this synthetic network by generating a network using a stochastic block model (SBM) composed of two blocks and then adding excessive citation edges among uniformly randomly selected pairs of nodes. Each block corresponds to a community, i.e., a group of nodes that are densely connected with each other within it but sparsely connected with those in the opposite group. Such communities overshadow anomalous groups in networks. 
 
-# Let's pretend that we do not know that the network is composed of two communities and additional edges. To run CIDRE, we first need to find the communities. To use `graph-tool` package to this end, install `graph-tool` by 
+# Let's pretend that we do not know that the network is composed of two communities plus additional edges. To run CIDRE, we first need to find the communities. To use `graph-tool` package to do this, install `graph-tool` by 
 
 # !conda install -y -c conda-forge graph-tool
 
-# Now, let's detect communities using `graph-tool` by fitting the degree-corrected stochastic block model (dcSBM) to the network and consider each block as a community.
+# Now, let's detect communities by fitting the degree-corrected stochastic block model (dcSBM) to the network and consider each detected block as a community.
 #
-# Our approach hinges on the assumption that the anomalous groups are not detected by the community detection algorithm. If we allow the number of communities to be large in this example, we would find anonalous groups as communities. Therefore, we limit the number of communities to be at most 3 to prevent the SBM to detect small anomalous groups in the network. This assumption looks artificial, but we do not need to impose it in the case of large networks because small anomalous groups usually have little impact on the global community structure, and thus SBM would not find them as communities.
+# Our approach hinges on the assumption that the anomalous groups are not detected by the community detection algorithm. If we allow the number of communities to be large in this example, we would find anonalous groups as communities. Therefore, we limit the number of communities to be at most 3 to prevent the SBM to detect small anomalous groups. This workaround is artificial. However, we do not need to impose it in the case of large networks (see Example 2 below) because small anomalous groups usually have little impact on the global community structure, and thus the SBM would not find them as communities.
 
 import graph_tool.all as gt
 def detect_community(A, K = None, **params):
@@ -128,11 +128,10 @@ fig, ax = plt.subplots(figsize=(width, height))
 # Plot a citation group
 cidre.DrawGroup().draw(groups[0], ax = ax)
 
-# -
-
 # # Example 2
-# Let's go through another example, which is a much large empirical citation network.
-#   
+
+# # Let's go through another example, which is a much large empirical citation network.
+# #  
 # In this example, we walk through how to use CIDRE to detect anomalous journal groups in a citation network. We assume that you have read "examples/example.ipynb".
 #
 # To begin with we need some libraries:
