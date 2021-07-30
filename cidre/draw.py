@@ -9,7 +9,7 @@ import textwrap
 import re
 
 
-class DrawCartel:
+class DrawGroup:
     def __init__(self):
         self.theta_1 = np.pi * 0.7
         self.angle_margin = 3 * np.pi / 25
