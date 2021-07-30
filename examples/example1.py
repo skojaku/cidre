@@ -79,7 +79,7 @@ def detect_community(A, K = None, **params):
     states = gt.minimize_blockmodel_dl(
         G,
         state_args=dict(eweight=G.ep.weight),
-        multilevel_mcmc_args = {"B_max": "B_max": A.shape[0] if K is None else K },
+        multilevel_mcmc_args = {"B_max": A.shape[0] if K is None else K },
         **params
     )
     b = states.get_blocks()
