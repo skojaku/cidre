@@ -8,7 +8,7 @@ import pandas as pd
 #
 def gen_deg(alpha, dave, N):
     deg = 1 / np.random.power(alpha, N)
-    return deg * dave * N / np.sum(deg)
+    return np.maximum(deg * dave * N / np.sum(deg), 1)
 
 
 def gen_noisy_dcSBM(indeg, outdeg, gids, mix_rate, is_bipartite=False):
@@ -55,7 +55,7 @@ def gen_anomalous_group(
     outdeg = np.zeros_like(nodes)
     gids = np.zeros_like(nodes)
 
-    theta = inflation_rate / (1 - inflation_rate)
+    theta = inflation_rate / (1 - inflation_rate) + 1
 
     indeg[recipients] = indeg_base[nodes[recipients]] * theta
     outdeg[donors] = outdeg_base[nodes[donors]] * theta
@@ -79,19 +79,19 @@ if __name__ == "__main__":
     output_node_file = "node-table.csv"
     output_edge_file = "edge-table.csv"
 
-    N = 100  # Number of nodes
+    N = 1000  # Number of nodes
     dave = 100  # average degree
     K = 2  # Number of communities
-    mix_rate = 0.1  # Level of noise
+    mix_rate = 0.2  # Level of noise
 
     Kc = 3  # Number of anomalous groups
     Nc = 5  # Number of nodes in an anomalous group
     Nd = 2  # Number of donors
-    inflation_rate = 0.3  # fraction of edge weights inflated by anomalous groups
+    inflation_rate = 0.2  # fraction of edge weights inflated by anomalous groups
 
     # %% Generate base graph
-    outdeg = gen_deg(3, dave, N)
-    indeg = gen_deg(3, dave, N)
+    outdeg = gen_deg(5, dave, N)
+    indeg = gen_deg(5, dave, N)
     alpha = np.sum(indeg) / np.sum(outdeg)
     if alpha > 1:
         outdeg = outdeg * alpha
