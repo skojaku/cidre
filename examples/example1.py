@@ -13,47 +13,83 @@
 #     name: python3
 # ---
 
+# + [markdown] id="KICTR2HtEcU9"
 # # About this notebook
 #
 # In this notebook, we apply CIDRE to a network with communities and demonstrate how to use CIDRE and visualize the detected groups.
-#
-#
-# # Loading libraries
-#
-# To start, we'll need some libraries.
-#
 
+# + [markdown] id="aLxSCdt2iRVl"
+# ## Preparation
+
+# + [markdown] id="ILo2xh5yico6"
+# ### Install CIDRE package
+#
+# First, we install `cidre` package with `pip`:
+
+# + id="MJtwwRBcF8iL"
+# !pip install cidre
+
+# + [markdown] id="1URuALNHF6f8"
+#
+# ### Loading libraries
+#
+# Next, we load some libraries
+
+# + id="aKnjeGnnEcU_"
 import sys
 import numpy as np
 from scipy import sparse
 import pandas as pd
 import cidre
+import networkx as nx
 
+# + [markdown] id="ifRxK9fbEcVA"
 # # Example 1
 #
-# Next, we load a network. We first present an example of a small artificial network.
+# We first present an example of a small artificial network, which can be loaded by
 
-# +
+# + colab={"base_uri": "https://localhost:8080/", "height": 319} id="dsLhebpREcVA" outputId="9daf09e9-5303-4f1d-8a00-4da392d40cf1"
 # Data path
-edge_file = "../data/synthe/edge-table.csv"
-node_file = "../data/synthe/node-table.csv"
+edge_file = "https://raw.githubusercontent.com/skojaku/cidre/main/data/synthe/edge-table.csv"
+node_file = "https://raw.githubusercontent.com/skojaku/cidre/main/data/synthe/node-table.csv"
 
 # Load
 node_table = pd.read_csv(node_file)
 A, node_labels = cidre.utils.read_edge_list(edge_file)
-# -
 
+# Visualization
+nx.draw(nx.from_scipy_sparse_matrix(A), linewidths = 1, edge_color="#8d8d8d", edgecolors="b")
+
+# + [markdown] id="2PDobGDcEcVB"
+# ## About this network
+#
 # We constructed this synthetic network by generating a network using a stochastic block model (SBM) composed of two blocks and then adding excessive citation edges among uniformly randomly selected pairs of nodes. Each block corresponds to a community, i.e., a group of nodes that are densely connected with each other within it but sparsely connected with those in the opposite group. Such communities overshadow anomalous groups in networks. 
 
-# Let's pretend that we do not know that the network is composed of two communities plus additional edges. To run CIDRE, we first need to find the communities. To use `graph-tool` package to do this, install `graph-tool` by 
+# + [markdown] id="M7Nnfwk1bWgw"
+# ## Community detection with graph-tool
 
-# !conda install -y -c conda-forge graph-tool
-
-# Now, let's detect communities by fitting the degree-corrected stochastic block model (dcSBM) to the network and consider each detected block as a community.
+# + [markdown] id="5PsfTNsQEcVB"
+# Let's pretend that we do not know that the network is composed of two communities plus additional edges. To run CIDRE, we first need to find the communities. We use `graph-tool` package to do this, which can be installed `graph-tool` by 
 #
-# Our approach hinges on the assumption that the anomalous groups are not detected by the community detection algorithm. If we allow the number of communities to be large in this example, we would find anonalous groups as communities. Therefore, we limit the number of communities to be at most 3 to prevent the SBM to detect small anomalous groups. This workaround is artificial. However, we do not need to impose it in the case of large networks (see Example 2 below) because small anomalous groups usually have little impact on the global community structure, and thus the SBM would not find them as communities.
+# ```python
+# conda install -c conda-forge graph-tool
+# ```
+#
+# or in `Colaboratory` platform:
 
+# + id="iNUpxKwTEcVB"
+# %%capture
+# !echo "deb http://downloads.skewed.de/apt bionic main" >> /etc/apt/sources.list
+# !apt-key adv --keyserver keys.openpgp.org --recv-key 612DEFB798507F25
+# !apt-get update
+# !apt-get install python3-graph-tool python3-cairo python3-matplotlib
+
+# + [markdown] id="w8HYpWMhEcVC"
+# Now, let's detect communities by fitting the degree-corrected stochastic block model (dcSBM) to the network and consider each detected block as a community.
+
+# + colab={"base_uri": "https://localhost:8080/"} id="h3qtB94jEcVC" outputId="85a56609-c84b-42a1-f7b8-f7a030db39a9"
 import graph_tool.all as gt
+
 def detect_community(A, K = None, **params):
     """Detect communities using the graph-tool package
 
@@ -86,36 +122,52 @@ def detect_community(A, K = None, **params):
     return np.unique(np.array(b.a), return_inverse = True)[1]
 
 
-group_membership = detect_community(A, K = 3)
+# + id="mZnRHmCHEcVD"
+group_membership = detect_community(A)
 
+# + [markdown] id="z3fE7Qq9EcVD"
+# ## Detecting anomalous groups in the network
+#
 # Now, we feed the network and its community structure to CIDRE. To to this, we create a `cidre.Cidre` object and input `group_membership` along with some key parameters to `cidre.Cidre`.
 
+# + id="NBCEKVBZEcVD"
 alg = cidre.Cidre(group_membership = group_membership, alpha = 0.05, min_edge_weight = 1)
 
+# + [markdown] id="EvvHYL_lEcVD"
 # - `alpha` (default 0.01) is the statistical significance level.
 # - `min_edge_weight` is the threshold of the edge weight, i.e., the edges with weight less than this value will be removed.
 #
-# Then, we input the network in the `scipy.sparse_csr` matrix or `nx.Graph` format to `cidre.Cidre.detect`.
+# Then, we input the network to `cidre.Cidre.detect`.
 
+# + id="UGmFBaLbEcVE"
 groups = alg.detect(A, threshold=0.15)
 
-# `groups` is a list of `Group` instances. We can get the donor nodes of a group, for example `groups[0]`, by
+# + [markdown] id="60Fp9LA9EcVE"
+# `groups` is a list of `Group` instances. A `Group` instance represents a group of nodes detected by CIDRE, and contains information about the type of each member node (i.e., donor and recipient). We can get the donor nodes of a group, for example `groups[0]`, by
 
+# + colab={"base_uri": "https://localhost:8080/"} id="9wU-fvA2EcVE" outputId="ff6fc117-4e4f-498f-fb04-4bd585743b35"
 groups[0].donors
 
+# + [markdown] id="CEPElXKkEcVE"
 # The keys and values of this dict object are the IDs of the nodes and their donor scores, respectively. The recipients and their recipient scores can be obtained by
 
+# + colab={"base_uri": "https://localhost:8080/"} id="aTFc_o5BEcVE" outputId="848ea1fc-3bd8-4eaa-b241-351c6846238a"
 groups[0].recipients
 
 
+# + [markdown] id="vo19Md36EcVF"
+# ## Visualization
+#
 # `cidre` package provides an API to visualize small groups. To use this API, we first need to import some additional libraries.
 
+# + id="lVQbfWDVEcVF"
 import seaborn as sns
 import matplotlib.pyplot as plt
 
+# + [markdown] id="W0vYp-lIEcVF"
 # Then, plot the group by
 
-# +
+# + colab={"base_uri": "https://localhost:8080/", "height": 332} id="au-3a1LHEcVF" outputId="c8000c8e-e541-415e-b334-c9de9302028d"
 # The following three lines are purely for visual enhancement, i.e., changing the saturation of the colors and font size.
 sns.set_style("white")
 sns.set(font_scale=1.2)
@@ -128,38 +180,29 @@ fig, ax = plt.subplots(figsize=(width, height))
 # Plot a citation group
 cidre.DrawGroup().draw(groups[0], ax = ax)
 
-# # Example 2
-
-# # Let's go through another example, which is a much large empirical citation network.
-# #  
-# In this example, we walk through how to use CIDRE to detect anomalous journal groups in a citation network. We assume that you have read "examples/example.ipynb".
+# + [markdown] id="WaAFxBmxZ1d6"
 #
-# To begin with we need some libraries:
+# # Example 2
+#
+# Let's apply CIDRE to a much large empirical citation network, i.e., the citation network of journals in 2013.
 
-import sys
-import numpy as np
-from scipy import sparse
-import pandas as pd
-import cidre
-
-# We load the citation network of journals in 2013.
-
-# +
+# + id="SWxvzmnTEcVG"
 # Data path
-edge_file = "../data/journal-citation/edge-table-2013.csv"
-node_file = "../data/journal-citation/community-label.csv"
+edge_file = "https://raw.githubusercontent.com/skojaku/cidre/main/data/journal-citation/edge-table-2013.csv"
+node_file = "https://raw.githubusercontent.com/skojaku/cidre/main/data/journal-citation/community-label.csv"
 
 # Load
 node_table = pd.read_csv(node_file)
 A, node_labels = cidre.utils.read_edge_list(edge_file)
-# -
 
+# + [markdown] id="RORUAoB4EcVG"
 # ## About this network
 #
 # This network is a citation network of journals in 2013 constructed from Microsoft Academic Graph.
 # Each edge is weighted by the number of citations made to papers in the prior two years.
 # The following are the basic statistics of this network.
 
+# + colab={"base_uri": "https://localhost:8080/"} id="dnY8niyoEcVG" outputId="4613a203-2fb9-43ac-8bee-df085a6d8594"
 print("Number of nodes: %d" % A.shape[0])
 print("Number of edges: %d" % A.sum())
 print("Average degree: %.2f" % (A.sum()/A.shape[0]))
@@ -168,59 +211,49 @@ print("Max out-degree: %d" % np.max(A.sum(axis = 1)))
 print("Maximum edge weight: %d" % A.max())
 print("Minimum edge weight: %d" % np.min(A.data))
 
-# ## Communities overshadow anomalous groups
+# + [markdown] id="x_IAlmL-EcVH"
+# ## Communities
 #
-# Now, let us demonstrate how community structure makes it difficult to find anomalous groups. To this end, we run CIDRE without telling it about the communities in the network.
+# [In our paper](https://www.nature.com/articles/s41598-021-93572-3), we identified the communities of journals using the graph-tool. `node_table` contains the community membership of each journal, from which we prepare `group_membership` array as follows.
 
-# Group detection
-# alpha: statistical significance level to find anomalous edges.
-# min_edge_weight: the edges with weight less than this value will be removed prior to detecting groups.
-alg = cidre.Cidre(group_membership = None, alpha = 0.01, min_edge_weight = 10)
-groups = alg.detect(A, threshold=0.15)
-
-# Let see the number of nodes in the group, which can be obtained by `.size` API of `Group` class:
-
-# group.size() will return the number of nodes in the group
-print("The number of journals in the largest group: %d" % np.max([group.size() for group in groups]))
-print("Number of groups detected: %d" % len(groups))
-
-# CIDRE detected a super large group composed of more than 6000 journals, which would not be anomalous.
-#
-# What happens?
-#
-# This group consists of journals of related fields. Because they are frequently citing with each other, CIDRE detects them as an anomalous group. This problem---looking for anomalous group of densely connected nodes results in finding non-suspecious communities---can occur not only with CIDRE but also with other methods based on community detection. It is, therefore, crucial to discount the effect of such dominant "normal" communities to find "anomalous" groups.
-
-# ## Finding anomalous groups in the network
-#
-# It is straightforward to tell CIDRE the "normal" communities in the network. Deciding what should be "normal" is your modelling decision. In context of the journal citation network, we consider journals in the same field as a normal citation community, and use a community detection algorithm (the degree-corrected stochastic block model) to identify the "normal" communities.
-#
-# To tell the normal communities to CIDRE, pass an array indicating group membership of nodes, `group_membership`, where `group_membership[i]` indicates the ID of the group to which node i belongs.
-#
-# We use the group membership in `node_table`. `node_table` consists of `journal_id`  and `community_id` columns, from which we prepare `group_membership` array as follows.
-
-# Get group membership
+# + id="xlaLIDjwEcVH"
+# Get the group membership
 node2com = dict(zip(node_table["journal_id"], node_table["community_id"]))
 group_membership = [node2com[node_labels[i]] for i in range(A.shape[0])]
 
-# And then pass `group_membership` to `Cidre` class.
+# + [markdown] id="_F1gHjpLlnyY"
+# ## Detecting anomalous groups in the network
 
+# + [markdown] id="vKzcAPkQEcVI"
+# As is demonstrated in the first example, we detect the anomalous groups in the network by
+
+# + id="kQEqAIJoEcVI"
 alg = cidre.Cidre(group_membership = group_membership, alpha = 0.01, min_edge_weight = 10)
 groups = alg.detect(A, threshold=0.15)
 
+# + colab={"base_uri": "https://localhost:8080/"} id="HHqk6MOEEcVI" outputId="19c23bde-34d6-4118-b110-494d812095c7"
 print("The number of journals in the largest group: %d" % np.max([group.size() for group in groups]))
 print("Number of groups detected: %d" % len(groups))
 
-# CIDRE detected a much smaller group composed of 16 journals.
+# + [markdown] id="AJjTNeJecyos"
+# [In our paper](https://www.nature.com/articles/s41598-021-93572-3), we omitted the groups that have within-group citations less than 50 because we expect that anomalous citation groups contain sufficiently many within-group citations, i.e., 
 
-# ## Visualizing anomalous groups
+# + id="wHvlyy6EdYQm"
+groups = [group for group in groups if group.get_num_edges()>=50]
 
-# Let us visualize the groups detected by CIDRE. As a demonstration, we random sample three groups.
+# + [markdown] id="cqg3nU-deGfh"
+# where `group.get.num_edges()` gives the sum of the weights of the non-self-loop edges within the group.
 
-# group.get_num_edges() gives the total weight of edges within the group
-groups_filtered = [group for group in groups if group.get_num_edges()>50] # Filter out the groups with total within-group edge weight less than 50
-groups_sampled = [groups_filtered[i] for i in np.random.choice(len(groups_filtered), 3, replace = False)]
+# + [markdown] id="SMylhKMNEcVI"
+# ## Visualization
 
-# +
+# + [markdown] id="sFWZTKxuEcVJ"
+# Let us visualize the groups detected by CIDRE. We random sample three groups to visualize.
+
+# + id="MvNno-z9EcVJ"
+groups_sampled = [groups[i] for i in np.random.choice(len(groups), 3, replace = False)]
+
+# + colab={"base_uri": "https://localhost:8080/", "height": 327} id="tp5hJeIiEcVJ" outputId="e1c9b1ed-d11b-4cff-c374-0873fe90e107"
 import seaborn as sns
 import matplotlib.pyplot as plt
 sns.set_style("white")
@@ -231,18 +264,24 @@ fig, axes = plt.subplots(ncols = 3, figsize=(6 * 3, 5))
 
 for i in range(3):
     cidre.DrawGroup().draw(groups_sampled[i], ax = axes.flat[i])
-# -
 
-# Let's place journal name instead of node IDs. To this end, we load node lables and make a dictionary from ID to label:
+# + [markdown] id="c-OTsIFdEcVJ"
+# The numbers beside the nodes are the IDs of the journals in the network. You may want to see the journal names and here is how to display them. 
+#
+#
+# First, we load node lables and make a dictionary from the ID of each node to the label:
 
-# +
-df = pd.read_csv("../data/journal-citation/journal_names.csv")
-journalid2label = dict(zip(df.journal_id.values, df.name.values)) # MAG journal id -> Journal Name
+# + id="Q67C_AJwEcVJ"
+df = pd.read_csv("https://raw.githubusercontent.com/skojaku/cidre/main/data/journal-citation/journal_names.csv")
+journalid2label = dict(zip(df.journal_id.values, df.name.values)) # Dictionary from MAG journal ID to the journal name
 
-id2label = {k:journalid2label[v] for k, v in node_labels.items()} # Dictionary from IDs to labels
+id2label = {k:journalid2label[v] for k, v in node_labels.items()} # This is a dictionary from ID to label, i.e., {ID:journal_name}
 
 
-# +
+# + [markdown] id="4JxPElAoghPl"
+# Then, give `id2label` to `cidre.DrawGroup.draw`, i.e.,  
+
+# + colab={"base_uri": "https://localhost:8080/", "height": 390} id="uIQ7XcirEcVJ" outputId="513e0ea1-3729-429b-b1e8-40bc4687f759"
 sns.set_style("white")
 sns.set(font_scale=1.2)
 sns.set_style("ticks")
