@@ -29,7 +29,8 @@ pip install cidre
 ```
 
 ## Example
-- [How to use CIDRE](examples/example1.ipynb)
+- [Quickstart](examples/example.ipynb)
+
 
 **A minimal example**
 
