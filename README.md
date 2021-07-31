@@ -28,9 +28,8 @@ If you use this package, please cite:
 pip install cidre
 ```
 
-## Examples
-- [Toy network with communities](examples/example1.ipynb)
-- [Citation network of journals in 2013](examples/example2.ipynb)
+## Example
+- [How to use CIDRE](examples/example1.ipynb)
 
 ## A minimal example
 
