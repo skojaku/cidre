@@ -18,15 +18,18 @@ If you use this package, please cite:
       primaryClass={physics.soc-ph}
 }
 ```
-
-## Requirements
-- Python 3.7 or later
-
 ## Install
+
 
 ```
 pip install cidre
 ```
+
+*Requirements*
+- Python 3.7 or later
+
+
+
 
 ## Example
 - [**Step by step guideline of how to use CIDRE**](examples/example.ipynb)
