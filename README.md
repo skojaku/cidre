@@ -36,12 +36,10 @@ pip install cidre
 *Requirements*
 - Python 3.7 or later
 
+## Minimal example 
 
-## Example
-- [**Step by step guideline of how to use CIDRE**](examples/example.ipynb)
+[**See our notebook for a more detailed example!**](examples/example.ipynb)
 
-
-**A minimal example**
 
 ```python
 import cidre
@@ -54,6 +52,14 @@ groups = alg.detect(A, threshold = 0.15)
 - `A`: Adjacency matrix of the input network (can be weighted or directed). Should be either an nx.Graph or scipy.sparse_csr_matrix. In case of scipy.sparse_csr_matrix format, A[i,j] indicates the weight of the edge from node i to j.
 - `threshold`: Threshold for the donor and recipient nodes. A larger threshold will yield tighter and smaller groups.
 - `groups`: List of `Group` instances. See [Group class](#Group-class) section.
+
+
+## Example
+
+
+[**Click here to see the step by step guideline of how to use CIDRE**](examples/example.ipynb)
+
+
 
 ## Group class
 
