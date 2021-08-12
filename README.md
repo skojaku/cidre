@@ -8,15 +8,22 @@ A recipient is a node having excessive edges from other member nodes in the same
 
 If you use this package, please cite:
 
+Kojaku, S., Livan, G. & Masuda, N. Detecting anomalous citation groups in journal networks. Sci Rep 11, 14524 (2021). https://doi.org/10.1038/s41598-021-93572-3. 
+
 ```latex
-@misc{kojaku2021cartel,
-      title={Detecting citation cartels in journal networks},
-      author={Sadamori Kojaku and Giacomo Livan and Naoki Masuda},
-      year={2020},
-      eprint={2009.09097},
-      archivePrefix={arXiv},
-      primaryClass={physics.soc-ph}
+@ARTICLE{Kojaku2021,
+  title     = "Detecting anomalous citation groups in journal networks",
+  author    = "Kojaku, Sadamori and Livan, Giacomo and Masuda, Naoki",
+  journal   = "Sci. Rep.",
+  publisher = "Nature Publishing Group",
+  volume    =  11,
+  number    =  1,
+  pages     = "1--11",
+  month     =  jul,
+  year      =  2021,
 }
+
+
 ```
 ## Install
 
@@ -25,10 +32,9 @@ If you use this package, please cite:
 pip install cidre
 ```
 
+
 *Requirements*
 - Python 3.7 or later
-
-
 
 
 ## Example
