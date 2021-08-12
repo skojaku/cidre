@@ -25,20 +25,23 @@ Kojaku, S., Livan, G. & Masuda, N. Detecting anomalous citation groups in journa
 
 
 ```
-
-## Requirements
-- Python 3.7 or later
-
 ## Install
+
 
 ```
 pip install cidre
 ```
 
-## Examples
-- [Toy network with communities](examples/example.ipynb)
 
-## A minimal example
+*Requirements*
+- Python 3.7 or later
+
+
+## Example
+- [**Step by step guideline of how to use CIDRE**](examples/example.ipynb)
+
+
+**A minimal example**
 
 ```python
 import cidre
